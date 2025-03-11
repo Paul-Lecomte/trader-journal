@@ -1,13 +1,13 @@
 console.log("TradingView Trade Logger Injected");
 
 function extractTradeData() {
-    const tradeElements = document.querySelectorAll(".some-trade-class"); // Update with correct selector
+    const tradeElements = document.querySelectorAll(".trade-container"); // Update with correct selector
 
     tradeElements.forEach(trade => {
-        const entryPrice = trade.querySelector(".entry-price-selector")?.innerText;
-        const stopLoss = trade.querySelector(".stop-loss-selector")?.innerText;
-        const takeProfit = trade.querySelector(".take-profit-selector")?.innerText;
-        const rrRatio = trade.querySelector(".rr-ratio-selector")?.innerText;
+        const entryPrice = trade.querySelector(".entry-price")?.innerText;
+        const stopLoss = trade.querySelector(".stop-loss")?.innerText;
+        const takeProfit = trade.querySelector(".take-profit")?.innerText;
+        const rrRatio = trade.querySelector(".rr-ratio")?.innerText;
         const tradeTime = new Date().toISOString();
 
         if (entryPrice && stopLoss && takeProfit && rrRatio) {
