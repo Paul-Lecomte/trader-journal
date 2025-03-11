@@ -3,13 +3,13 @@
   "name": "TradingView Trade Logger",
   "version": "1.0",
   "permissions": ["activeTab", "storage", "scripting"],
-  "host_permissions": ["https://www.tradingview.com/*"],
+  "host_permissions": ["https://*.tradingview.com/*"],
   "background": {
     "service_worker": "background.js"
   },
   "content_scripts": [
     {
-      "matches": ["https://www.tradingview.com/*"],
+      "matches": ["https://*.tradingview.com/*"],
       "js": ["content.js"],
       "run_at": "document_idle"
     }
