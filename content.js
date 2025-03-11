@@ -19,13 +19,11 @@ function extractTradeData() {
                 tradeTime
             };
 
-            chrome.storage.local.get({ trades: [] }, (result) => {
-                const trades = result.trades;
-                trades.push(tradeData);
-                chrome.storage.local.set({ trades });
+            chrome.runtime.sendMessage({ action: "saveTrade", tradeData }, (response) => {
+                if (response?.success) {
+                    console.log("Trade successfully saved in background");
+                }
             });
-
-            console.log("Trade saved:", tradeData);
         }
     });
 }
