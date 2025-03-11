@@ -8,21 +8,22 @@ function isHistoryPageLoadedAndActive() {
 
 // Function to extract completed trade data
 function extractCompletedTradeData() {
-    const tradeTable = document.querySelector(".ka-tbody.tableBody-Tu141ut0");
+    const tradeTable = document.querySelector(".ka-table.orders"); // Update the selector to target the correct table
     if (!tradeTable) {
         console.log("Trade table not found! Retrying...");
         return; // If the table is not found, return and try again later
     }
 
-    const tradeElements = tradeTable.querySelectorAll(".ka-tr.ka-row.row-Tu141ut0");
-    console.log("Found trade elements:", tradeElements);
+    // Get the rows from the table body
+    const tradeRows = tradeTable.querySelectorAll(".ka-tr.ka-row.row-Tu141ut0"); // Update the row selector to match the rows
+    console.log("Found trade rows:", tradeRows);
 
-    if (tradeElements.length === 0) {
+    if (tradeRows.length === 0) {
         console.log("No trades found in the table.");
         return;
     }
 
-    tradeElements.forEach(trade => {
+    tradeRows.forEach(trade => {
         // Set fallback value to "No Data" if field is empty or undefined
         const symbol = trade.querySelector("td[data-label='Symbole'] .titleContent-DIAl4Kmu")?.innerText || "No Data";
         const side = trade.querySelector("td[data-label='Côté'] .blue-Qz5vw9Wh")?.innerText || "No Data";
