@@ -18,12 +18,13 @@
     "default_popup": "popup.html",
     "default_icon": "icon.jpg"
   },
-  "chrome_url_overrides": {
-    "newtab": "frontend/index.html"
-  },
   "web_accessible_resources": [
     {
-      "resources": ["frontend/*"],
+      "resources": [
+        "frontend_build/index.html",
+        "frontend_build/_next/static/*",
+        "frontend_build/static/*"
+      ],
       "matches": ["<all_urls>"]
     }
   ]
