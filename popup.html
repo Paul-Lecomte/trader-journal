@@ -3,34 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trade Logs</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>Trade Journal</title>
+    <style>
+        body { width: 200px; text-align: center; padding: 20px; }
+        button { background-color: #007bff; color: white; padding: 10px; border: none; cursor: pointer; border-radius: 5px; }
+        button:hover { background-color: #0056b3; }
+    </style>
 </head>
 <body>
-<h2>Trade Logs</h2>
-<table>
-    <thead>
-    <tr>
-        <th>Symbol</th>
-        <th>Side</th>
-        <th>Quantity</th>
-        <th>Avg Price</th>
-        <th>Take Profit</th>
-        <th>Stop Loss</th>
-        <th>Last Price</th>
-        <th>Unrealized PnL</th>
-        <th>Market Value</th>
-        <th>Leverage</th>
-        <th>Margin</th>
-        <th>Trade Time</th>
-        <th>Close Time</th>
-        <th>Actions</th>
-    </tr>
-    </thead>
-    <tbody id="tradeTableBody"></tbody>
-</table>
-<button id="clearAll">Clear All Trades</button>
-<button id="exportCSV">Export as CSV</button>
+<h2>Trade Journal</h2>
+<button id="openJournal">Open Journal</button>
 <script src="popup.js"></script>
 </body>
 </html>
