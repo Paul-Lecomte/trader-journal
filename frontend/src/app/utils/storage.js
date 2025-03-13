@@ -1,3 +1,4 @@
+"use client";
 export const fetchData = async () => {
     return new Promise((resolve) => {
         chrome.storage.local.get("trades", (data) => {
