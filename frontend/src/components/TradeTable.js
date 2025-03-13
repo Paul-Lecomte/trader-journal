@@ -1,3 +1,4 @@
+"use client";
 export const TradeTable = ({ trades }) => {
     return (
         <div className="mt-6">
