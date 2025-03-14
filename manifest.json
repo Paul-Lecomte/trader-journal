@@ -22,10 +22,17 @@
     {
       "resources": [
         "frontend_build/index.html",
-        "frontend_build/_next/static/*",
-        "frontend_build/static/*"
+        "frontend_build/static/*",
+        "frontend_build/**/*"
       ],
       "matches": ["<all_urls>"]
     }
-  ]
+  ],
+  "content_security_policy": {
+    "extension_pages": {
+      "script-src": ["'self'", "'unsafe-inline'"],
+      "style-src": ["'self'"],
+      "object-src": ["'self'"]
+    }
+  }
 }
