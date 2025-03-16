@@ -8,6 +8,24 @@ function isHistoryPageLoadedAndActive() {
     return historyPage !== null;
 }
 
+function calculatePL(entryPrice, exitPrice, qty, side) {
+    entryPrice = parseFloat(entryPrice);
+    exitPrice = parseFloat(exitPrice);
+    qty = parseFloat(qty);
+
+    if (isNaN(entryPrice) || isNaN(exitPrice) || isNaN(qty)) {
+        return "--"; // Return placeholder if any value is invalid
+    }
+
+    // Calculate P/L
+    if (side.toLowerCase() === "buy") {
+        return (exitPrice - entryPrice) * qty;
+    } else if (side.toLowerCase() === "sell") {
+        return (entryPrice - exitPrice) * qty;
+    }
+    return "--"; // Return placeholder if side is not recognized
+}
+
 function extractCompletedTradeData() {
     if (extracting) return;
     extracting = true;
@@ -44,6 +62,10 @@ function extractCompletedTradeData() {
         const closeTime = trade.querySelector("td[data-label='Heure de clôture']")?.innerText || "--";
         const orderId = trade.querySelector("td[data-label='Numéro de commande']")?.innerText || "--";
 
+        // Calculate P/L
+        const pl = calculatePL(priceLimit, avgPrice, qty, side);
+        console.log(`P/L for trade ${orderId}: ${pl}`);
+
         chrome.storage.local.get({ processedOrderIds: [] }, (result) => {
             const processedOrderIds = result.processedOrderIds || [];
 
@@ -66,7 +88,8 @@ function extractCompletedTradeData() {
                 margin,
                 tradeTime,
                 closeTime,
-                orderId
+                orderId,
+                pl  // Include P/L in the saved trade data
             };
 
             chrome.runtime.sendMessage({ action: "saveTrade", tradeData }, (response) => {
