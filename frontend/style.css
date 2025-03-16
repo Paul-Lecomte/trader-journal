@@ -126,3 +126,48 @@ textarea.comment {
     resize: none;
 }
 
+/* Responsive Design */
+@media (max-width: 768px) {
+    .container {
+        flex-direction: column;
+    }
+
+    .sidebar {
+        width: 100%;
+        padding: 15px;
+        align-items: center;
+    }
+
+    .main-content {
+        padding: 20px;
+    }
+
+    table {
+        font-size: 0.9rem;
+    }
+
+    .chart-container {
+        max-width: 100%;
+    }
+
+    .sidebar h2 {
+        font-size: 1.4rem;
+        text-align: center;
+    }
+
+    .sidebar input,
+    .sidebar button {
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .sidebar {
+        width: 100%;
+    }
+
+    .sidebar input,
+    .sidebar button {
+        font-size: 0.8rem;
+    }
+}
