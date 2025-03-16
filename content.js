@@ -2,86 +2,83 @@ console.clear();
 console.log("Checking for completed trades...");
 
 let extracting = false;
-let lastExtractTime = 0;
-const extractionCooldown = 2000; // 2 seconds cooldown between extractions
 
 function isHistoryPageLoadedAndActive() {
-    return document.querySelector('div.page-RYOkdllU.js-page[data-account-manager-page-id="history"].active-RYOkdllU') !== null;
+    const historyPage = document.querySelector('div.page-RYOkdllU.js-page[data-account-manager-page-id="history"].active-RYOkdllU');
+    return historyPage !== null;
 }
 
 function extractCompletedTradeData() {
     if (extracting) return;
-
-    const now = Date.now();
-    if (now - lastExtractTime < extractionCooldown) {
-        console.log("Skipping extraction: Cooldown in effect.");
-        return;
-    }
-
     extracting = true;
-    lastExtractTime = now;
 
     const tradeTable = document.querySelector(".ka-table.orders");
     if (!tradeTable) {
-        console.warn("Trade table not found! Retrying...");
+        console.log("Trade table not found! Retrying...");
         extracting = false;
         return;
     }
 
     const tradeRows = document.querySelectorAll("tr.ka-tr.ka-row");
-    console.log(`Found ${tradeRows.length} trade rows.`);
+    console.log("Found trade rows:", tradeRows);
 
     if (tradeRows.length === 0) {
-        console.log("No trades found.");
+        console.log("No trades found in the table.");
         extracting = false;
         return;
     }
 
-    chrome.storage.local.get({ processedOrderIds: [] }, (result) => {
-        const processedOrderIds = new Set(result.processedOrderIds || []);
-        let newTrades = [];
+    tradeRows.forEach(trade => {
+        const symbol = trade.querySelector("td[data-label='Symbole']")?.innerText || "--";
+        const side = trade.querySelector("td[data-label='Côté']")?.innerText || "--";
+        const type = trade.querySelector("td[data-label='Type']")?.innerText || "--";
+        const qty = trade.querySelector("td[data-label='Qté']")?.innerText || "--";
+        const priceLimit = trade.querySelector("td[data-label='Limite de Prix']")?.innerText || "--";
+        const stopPrice = trade.querySelector("td[data-label='Prix d’arrêt']")?.innerText || "--";
+        const avgPrice = trade.querySelector("td[data-label='Prix de remplissage']")?.innerText || "--";
+        const status = trade.querySelector("td[data-label='Statut']")?.innerText || "--";
+        const commission = trade.querySelector("td[data-label='Commission']")?.innerText || "--";
+        const leverage = trade.querySelector("td[data-label='Effet de levier']")?.innerText || "--";
+        const margin = trade.querySelector("td[data-label='Marge']")?.innerText || "--";
+        const tradeTime = trade.querySelector("td[data-label='Placer le temps']")?.innerText || "--";
+        const closeTime = trade.querySelector("td[data-label='Heure de clôture']")?.innerText || "--";
+        const orderId = trade.querySelector("td[data-label='Numéro de commande']")?.innerText || "--";
 
-        tradeRows.forEach(trade => {
-            const orderId = trade.querySelector("td[data-label='Numéro de commande']")?.innerText || "--";
+        chrome.storage.local.get({ processedOrderIds: [] }, (result) => {
+            const processedOrderIds = result.processedOrderIds || [];
 
-            if (processedOrderIds.has(orderId)) {
-                console.log(`Skipping already processed trade: ${orderId}`);
+            if (processedOrderIds.includes(orderId)) {
+                console.log(`Order ID ${orderId} already processed. Skipping...`);
                 return;
             }
 
             const tradeData = {
-                symbol: trade.querySelector("td[data-label='Symbole']")?.innerText || "--",
-                side: trade.querySelector("td[data-label='Côté']")?.innerText || "--",
-                type: trade.querySelector("td[data-label='Type']")?.innerText || "--",
-                qty: trade.querySelector("td[data-label='Qté']")?.innerText || "--",
-                priceLimit: trade.querySelector("td[data-label='Limite de Prix']")?.innerText || "--",
-                stopPrice: trade.querySelector("td[data-label='Prix d’arrêt']")?.innerText || "--",
-                avgPrice: trade.querySelector("td[data-label='Prix de remplissage']")?.innerText || "--",
-                status: trade.querySelector("td[data-label='Statut']")?.innerText || "--",
-                commission: trade.querySelector("td[data-label='Commission']")?.innerText || "--",
-                leverage: trade.querySelector("td[data-label='Effet de levier']")?.innerText || "--",
-                margin: trade.querySelector("td[data-label='Marge']")?.innerText || "--",
-                tradeTime: trade.querySelector("td[data-label='Placer le temps']")?.innerText || "--",
-                closeTime: trade.querySelector("td[data-label='Heure de clôture']")?.innerText || "--",
+                symbol,
+                side,
+                type,
+                qty,
+                priceLimit,
+                stopPrice,
+                avgPrice,
+                status,
+                commission,
+                leverage,
+                margin,
+                tradeTime,
+                closeTime,
                 orderId
             };
 
-            newTrades.push(tradeData);
-            processedOrderIds.add(orderId);
-        });
-
-        if (newTrades.length > 0) {
-            chrome.runtime.sendMessage({ action: "saveTrades", trades: newTrades }, (response) => {
+            chrome.runtime.sendMessage({ action: "saveTrade", tradeData }, (response) => {
                 if (response?.success) {
-                    console.log(`Successfully saved ${newTrades.length} new trades.`);
-                    chrome.storage.local.set({ processedOrderIds: Array.from(processedOrderIds) });
+                    console.log("Trade successfully saved:", tradeData);
+                    processedOrderIds.push(orderId);
+                    chrome.storage.local.set({ processedOrderIds });
                 } else {
-                    console.error("Failed to save trades:", response?.error);
+                    console.log("Failed to save trade:", response?.error);
                 }
             });
-        } else {
-            console.log("No new trades to save.");
-        }
+        });
     });
 
     extracting = false;
@@ -91,15 +88,12 @@ function checkAndExtractTrades() {
     if (isHistoryPageLoadedAndActive()) {
         extractCompletedTradeData();
     } else {
-        console.log("History page is not loaded or active.");
+        console.log("History page is not loaded or active yet.");
     }
 }
 
-// 🔹 **Efficient MutationObserver with Throttle**
 const observer = new MutationObserver(() => {
     setTimeout(checkAndExtractTrades, 500);
 });
 
 observer.observe(document.body, { childList: true, subtree: true });
-
-console.log("Trade extraction observer initialized.");
