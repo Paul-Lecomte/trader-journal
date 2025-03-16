@@ -4,7 +4,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // Redirect to the full-page journaling interface
     openJournalButton.addEventListener("click", function () {
         chrome.tabs.create({
-            url: chrome.runtime.getURL("frontend_build/journal.html") // Open Next.js journal
+            url: chrome.runtime.getURL("frontend/index.html") // Open Next.js journal
         });
     });
 });
