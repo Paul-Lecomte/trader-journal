@@ -1,3 +1,4 @@
+/* Reset and global styles */
 * {
     margin: 0;
     padding: 0;
@@ -5,41 +6,49 @@
 }
 
 body {
-    font-family: Arial, sans-serif;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f4f7fc;
     display: flex;
     height: 100vh;
-    background-color: #f4f4f9;
+    overflow: hidden;
 }
 
 .container {
     display: flex;
     width: 100%;
+    height: 100%;
+    flex-direction: row;
 }
 
+/* Sidebar Styles */
 .sidebar {
     width: 250px;
-    background-color: #333;
+    background-color: #2f3c48;
     color: white;
     padding: 20px;
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: flex-start;
+    justify-content: flex-start;
 }
 
 .sidebar h2 {
     margin-bottom: 20px;
+    font-size: 1.6rem;
 }
 
 .sidebar input,
 .sidebar button {
-    padding: 10px;
-    margin-bottom: 10px;
+    padding: 12px;
+    margin-bottom: 15px;
     width: 100%;
+    border-radius: 8px;
+    font-size: 1rem;
 }
 
 .sidebar input {
-    margin-bottom: 20px;
-    border-radius: 5px;
+    border: 1px solid #ccc;
+    background-color: #fff;
 }
 
 .sidebar button {
@@ -47,33 +56,48 @@ body {
     color: white;
     border: none;
     cursor: pointer;
+    transition: background-color 0.3s ease;
 }
 
 .sidebar button:hover {
     background-color: #45a049;
 }
 
+/* Main Content Styles */
 .main-content {
     flex: 1;
-    padding: 20px;
+    padding: 30px;
+    overflow-y: auto;
+    background-color: white;
 }
 
 .main-content h3 {
-    margin-bottom: 20px;
+    font-size: 1.8rem;
     color: #333;
+    margin-bottom: 20px;
 }
 
+/* Chart Container */
 .chart-container {
-    max-width: 600px;
-    margin: 20px auto;
+    max-width: 700px;
+    margin: 30px auto;
+    padding: 15px;
+    background-color: #fff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Table Styles */
+.table-container {
+    max-width: 100%;
+    overflow-x: auto;
+    margin-top: 30px;
 }
 
 table {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 20px;
-    background-color: white;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    background-color: #fff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 th, td {
@@ -83,12 +107,22 @@ th, td {
 }
 
 th {
-    background-color: #f4f4f9;
+    background-color: #f7f7f7;
+    color: #333;
+    font-weight: bold;
 }
 
+tbody tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+/* Textarea for Comments */
 textarea.comment {
     width: 100%;
     height: 50px;
-    padding: 5px;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
     resize: none;
 }
+
