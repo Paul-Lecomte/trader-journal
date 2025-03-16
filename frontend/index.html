@@ -2,9 +2,57 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trading Journal</title>
+
+    <!-- External Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/moment@2.29.1/moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
+<div class="container">
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <h2>Trading Journal</h2>
+        <input type="text" id="search-input" placeholder="Search by Symbol or Order ID">
+        <button id="filter-button">Filter</button>
+    </div>
 
+    <!-- Main Content -->
+    <div class="main-content">
+        <h3>Trade History</h3>
+
+        <!-- Win/Loss Chart -->
+        <div class="chart-container">
+            <canvas id="win-loss-chart"></canvas>
+        </div>
+
+        <!-- Trade Table -->
+        <table id="trade-history">
+            <thead>
+            <tr>
+                <th>Symbol</th>
+                <th>Side</th>
+                <th>Type</th>
+                <th>Qty</th>
+                <th>Avg Price</th>
+                <th>Status</th>
+                <th>Order ID</th>
+                <th>Trade Time</th>
+                <th>Comment</th>
+            </tr>
+            </thead>
+            <tbody id="trade-history-body">
+            <!-- Trade rows will be dynamically added here -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Scripts -->
+<script src="script.js"></script>
 </body>
 </html>
