@@ -23,17 +23,21 @@ function renderTradeHistory(trades) {
         // Format the trade time
         const formattedTradeTime = formatTime(trade.tradeTime);
 
+        // Calculate P/L if available
+        const pl = trade.pl ? trade.pl : '--'; // Use P/L value from trade or '--' if not available
+
         row.innerHTML = `
-      <td>${trade.symbol}</td>
-      <td>${trade.side}</td>
-      <td>${trade.type}</td>
-      <td>${trade.qty}</td>
-      <td>${trade.avgPrice}</td>
-      <td>${trade.status}</td>
-      <td>${trade.orderId}</td>
-      <td>${formattedTradeTime}</td>
-      <td><textarea class="comment" data-order-id="${trade.orderId}" placeholder="Add a comment"></textarea></td>
-    `;
+            <td>${trade.symbol}</td>
+            <td>${trade.side}</td>
+            <td>${trade.type}</td>
+            <td>${trade.qty}</td>
+            <td>${trade.avgPrice}</td>
+            <td>${trade.status}</td>
+            <td>${trade.orderId}</td>
+            <td>${formattedTradeTime}</td>
+            <td>${pl}</td>
+            <td><textarea class="comment" data-order-id="${trade.orderId}" placeholder="Add a comment"></textarea></td>
+        `;
         tableBody.appendChild(row);
 
         // Check if there's a stored comment for this order
