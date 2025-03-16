@@ -1,4 +1,4 @@
-
+![Extension Icon](./assets/icon.png)
 # Trading Data Collector Browser Extension
 
 This browser extension captures and tracks trading data from TradingView to help analyze your trading performance. It records key details such as entry price, stop loss, take profit, risk-to-reward ratio, risk amount, potential profit, and entry/exit times. This data is saved locally and will be used in a future UI built with Next.js for deeper performance analysis and visualization.
