@@ -16,8 +16,12 @@
     }
   ],
   "action": {
-    "default_popup": "popup.html",
-    "default_icon": "assets/icon.png"
+    "default_popup": "popup.html"
+  },
+  "icons": {
+    "16": "assets/icon.jpg",
+    "48": "assets/icon.jpg",
+    "128": "assets/icon.jpg"
   },
   "web_accessible_resources": [
     {
