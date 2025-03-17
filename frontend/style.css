@@ -153,6 +153,11 @@ textarea.comment {
         font-size: 0.9rem;
     }
 
+    .trading-chart {
+        display: flex;
+        flex-direction: column;
+    }
+
     .chart-container {
         max-width: 100%;
     }
