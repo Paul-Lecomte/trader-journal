@@ -102,35 +102,56 @@ function createWinLossChart(trades) {
 
 // Create Win/Loss chart
 function createWinLossChartEvolution(trades) {
-    // Group trades by status using Lodash (could also be done using simple JS, but Lodash is easier)
-    const grouped = _.groupBy(trades, 'status');
+    // Sort trades by trade time
+    const sortedTrades = trades.sort((a, b) => a.tradeTime - b.tradeTime);
 
-    const winCount = (grouped['Completed'] || []).filter(trade => parseFloat(trade.avgPrice) > 0).length;
-    const lossCount = trades.length - winCount;
+    // Extract labels (dates) and cumulative P/L
+    let labels = [];
+    let cumulativePL = [];
+    let runningTotal = 0;
 
+    sortedTrades.forEach(trade => {
+        const tradeDate = moment(trade.tradeTime).format('YYYY-MM-DD'); // Format date
+        const pl = parseFloat(trade.pl) || 0; // Use P/L or 0 if missing
+
+        runningTotal += pl; // Update running total
+        labels.push(tradeDate);
+        cumulativePL.push(runningTotal);
+    });
+
+    // Destroy existing chart if it exists (to avoid duplication)
     const ctx = document.getElementById('win-loss-evolution-chart').getContext('2d');
-    new Chart(ctx, {
+    if (window.winLossEvolutionChart) {
+        window.winLossEvolutionChart.destroy();
+    }
+
+    // Create line chart for P/L over time
+    window.winLossEvolutionChart = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: ['Wins', 'Losses'],
+            labels: labels,
             datasets: [{
-                data: [winCount, lossCount],
-                backgroundColor: ['#4caf50', '#f44336']
+                label: 'Cumulative P/L',
+                data: cumulativePL,
+                borderColor: '#2196F3',
+                backgroundColor: 'rgba(33, 150, 243, 0.2)',
+                fill: true,
+                tension: 0.3,
+                pointRadius: 3
             }]
         },
         options: {
             responsive: true,
-            plugins: {
-                legend: {
-                    position: 'top'
+            scales: {
+                x: {
+                    title: { display: true, text: 'Date' }
                 },
-                tooltip: {
-                    callbacks: {
-                        label: function(tooltipItem) {
-                            return `${tooltipItem.label}: ${tooltipItem.raw}`;
-                        }
-                    }
+                y: {
+                    title: { display: true, text: 'Cumulative Profit/Loss' }
                 }
+            },
+            plugins: {
+                legend: { display: false }
             }
         }
     });
