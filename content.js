@@ -4,26 +4,22 @@ console.log("Checking for completed trades...");
 let extracting = false;
 
 function isHistoryPageLoadedAndActive() {
-    const historyPage = document.querySelector('div.page-RYOkdllU.js-page[data-account-manager-page-id="history"].active-RYOkdllU');
-    return historyPage !== null;
+    return document.querySelector('div.page-RYOkdllU.js-page[data-account-manager-page-id="history"].active-RYOkdllU') !== null;
 }
 
+// Store open positions for P/L calculation
+let openPositions = {};
+
 function calculatePL(entryPrice, exitPrice, qty, side) {
-    entryPrice = parseFloat(entryPrice);
-    exitPrice = parseFloat(exitPrice);
+    entryPrice = parseFloat(entryPrice.replace(/\s/g, '').replace(',', '.'));
+    exitPrice = parseFloat(exitPrice.replace(/\s/g, '').replace(',', '.'));
     qty = parseFloat(qty);
 
     if (isNaN(entryPrice) || isNaN(exitPrice) || isNaN(qty)) {
-        return "--"; // Return placeholder if any value is invalid
+        return "--"; // Return placeholder if invalid
     }
 
-    // Calculate P/L
-    if (side.toLowerCase() === "buy") {
-        return (exitPrice - entryPrice) * qty;
-    } else if (side.toLowerCase() === "sell") {
-        return (entryPrice - exitPrice) * qty;
-    }
-    return "--"; // Return placeholder if side is not recognized
+    return side.toLowerCase() === "buy" ? (exitPrice - entryPrice) * qty : (entryPrice - exitPrice) * qty;
 }
 
 function extractCompletedTradeData() {
@@ -38,7 +34,7 @@ function extractCompletedTradeData() {
     }
 
     const tradeRows = document.querySelectorAll("tr.ka-tr.ka-row");
-    console.log("Found trade rows:", tradeRows);
+    console.log("Found trade rows:", tradeRows.length);
 
     if (tradeRows.length === 0) {
         console.log("No trades found in the table.");
@@ -62,45 +58,64 @@ function extractCompletedTradeData() {
         const closeTime = trade.querySelector("td[data-label='Heure de clôture']")?.innerText || "--";
         const orderId = trade.querySelector("td[data-label='Numéro de commande']")?.innerText || "--";
 
-        // Calculate P/L
-        const pl = calculatePL(priceLimit, avgPrice, qty, side);
-        console.log(`P/L for trade ${orderId}: ${pl}`);
+        if (!symbol || !side || !avgPrice || avgPrice === "--") return; // Ignore invalid trades
+
+        const price = avgPrice.replace(/\s/g, '').replace(',', '.'); // Convert price format
+
+        if (!openPositions[symbol]) {
+            openPositions[symbol] = [];
+        }
+
+        let pl = "--";
+        let closingPrice = "--";
+
+        if (side.toLowerCase() === "buy") {
+            openPositions[symbol].push({ price, qty, orderId, tradeTime });
+        } else if (side.toLowerCase() === "sell" && openPositions[symbol].length > 0) {
+            let buyTrade = openPositions[symbol].shift(); // Match with first Buy trade
+            pl = calculatePL(buyTrade.price, price, qty, side);
+            closingPrice = price;
+        }
+
+        const tradeData = {
+            symbol,
+            side,
+            type,
+            qty,
+            priceLimit,
+            stopPrice,
+            avgPrice,
+            status,
+            commission,
+            leverage,
+            margin,
+            tradeTime,
+            closeTime,
+            orderId,
+            pl,
+            closingPrice
+        };
 
         chrome.storage.local.get({ processedOrderIds: [] }, (result) => {
             const processedOrderIds = result.processedOrderIds || [];
 
-            if (processedOrderIds.includes(orderId)) {
-                console.log(`Order ID ${orderId} already processed. Skipping...`);
-                return;
+            if (!processedOrderIds.includes(orderId)) {
+                chrome.runtime.sendMessage({ action: "saveTrade", tradeData }, (response) => {
+                    if (response?.success) {
+                        console.log("Trade successfully saved:", tradeData);
+                        processedOrderIds.push(orderId);
+                        chrome.storage.local.set({ processedOrderIds });
+                    } else {
+                        console.log("Failed to save trade:", response?.error);
+                    }
+                });
+            } else {
+                console.log(`Order ID ${orderId} already processed. Updating P/L...`);
+                chrome.storage.local.get({ trades: [] }, (data) => {
+                    const trades = data.trades.map(trade => trade.orderId === orderId ? { ...trade, pl, closingPrice } : trade);
+                    chrome.storage.local.set({ trades });
+                });
             }
-
-            const tradeData = {
-                symbol,
-                side,
-                type,
-                qty,
-                priceLimit,
-                stopPrice,
-                avgPrice,
-                status,
-                commission,
-                leverage,
-                margin,
-                tradeTime,
-                closeTime,
-                orderId,
-                pl  // Include P/L in the saved trade data
-            };
-
-            chrome.runtime.sendMessage({ action: "saveTrade", tradeData }, (response) => {
-                if (response?.success) {
-                    console.log("Trade successfully saved:", tradeData);
-                    processedOrderIds.push(orderId);
-                    chrome.storage.local.set({ processedOrderIds });
-                } else {
-                    console.log("Failed to save trade:", response?.error);
-                }
-            });
         });
     });
 
@@ -115,6 +130,7 @@ function checkAndExtractTrades() {
     }
 }
 
+// Watch for page changes and extract trades
 const observer = new MutationObserver(() => {
     setTimeout(checkAndExtractTrades, 500);
 });
