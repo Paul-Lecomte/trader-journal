@@ -20,8 +20,9 @@ function renderTradeHistory(trades) {
     trades.forEach(trade => {
         const row = document.createElement('tr');
 
-        // Format the trade time
+        // Format trade time and close time
         const formattedTradeTime = formatTime(trade.tradeTime);
+        const formattedCloseTime = trade.closeTime ? formatTime(trade.closeTime) : '--';
 
         // Calculate P/L if available
         const pl = trade.pl ? trade.pl : '--'; // Use P/L value from trade or '--' if not available
@@ -31,10 +32,16 @@ function renderTradeHistory(trades) {
             <td>${trade.side}</td>
             <td>${trade.type}</td>
             <td>${trade.qty}</td>
+            <td>${trade.priceLimit || '--'}</td>
+            <td>${trade.stopPrice || '--'}</td>
             <td>${trade.avgPrice}</td>
             <td>${trade.status}</td>
-            <td>${trade.orderId}</td>
+            <td>${trade.commission || '--'}</td>
+            <td>${trade.leverage || '--'}</td>
+            <td>${trade.margin || '--'}</td>
             <td>${formattedTradeTime}</td>
+            <td>${formattedCloseTime}</td>
+            <td>${trade.orderId}</td>
             <td>${pl}</td>
             <td><textarea class="comment" data-order-id="${trade.orderId}" placeholder="Add a comment"></textarea></td>
         `;
