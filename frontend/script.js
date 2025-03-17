@@ -100,11 +100,48 @@ function createWinLossChart(trades) {
     });
 }
 
+// Create Win/Loss chart
+function createWinLossChartEvolution(trades) {
+    // Group trades by status using Lodash (could also be done using simple JS, but Lodash is easier)
+    const grouped = _.groupBy(trades, 'status');
+
+    const winCount = (grouped['Completed'] || []).filter(trade => parseFloat(trade.avgPrice) > 0).length;
+    const lossCount = trades.length - winCount;
+
+    const ctx = document.getElementById('win-loss-evolution-chart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['Wins', 'Losses'],
+            datasets: [{
+                data: [winCount, lossCount],
+                backgroundColor: ['#4caf50', '#f44336']
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'top'
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(tooltipItem) {
+                            return `${tooltipItem.label}: ${tooltipItem.raw}`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
 // Initialize the app
 function init() {
     fetchTrades().then((trades) => {
         renderTradeHistory(trades);
         createWinLossChart(trades);
+        createWinLossChartEvolution(trades);
     });
 
     // Filter trades by search input
