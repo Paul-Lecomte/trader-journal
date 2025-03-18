@@ -130,7 +130,8 @@ function extractCompletedTradeData() {
 
 function checkAndExtractTrades() {
     if (isHistoryPageLoadedAndActive()) {
-        extractCompletedTradeData();
+        // Wait for 2 seconds before continuing
+        setTimeout(extractCompletedTradeData, 2000);
     } else {
         console.log("History page is not loaded or active yet.");
     }
