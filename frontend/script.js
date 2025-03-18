@@ -24,8 +24,8 @@ function renderTradeHistory(trades) {
         const formattedTradeTime = formatTime(trade.tradeTime);
         const formattedCloseTime = trade.closeTime ? formatTime(trade.closeTime) : '--';
 
-        // Calculate P/L if available
-        const pl = trade.pl ? trade.pl : '--'; // Use P/L value from trade or '--' if not available
+        // Calculate P/L if available and round it to 2 decimal places
+        const pl = trade.pl ? parseFloat(trade.pl).toFixed(2) : '--'; // Use P/L value from trade or '--' if not available
 
         row.innerHTML = `
             <td>${trade.symbol}</td>
@@ -123,7 +123,7 @@ function createWinLossChartEvolution(trades) {
 
         runningTotal += pl; // Update running total
         labels.push(tradeDate);
-        cumulativePL.push(runningTotal);
+        cumulativePL.push(runningTotal.toFixed(2)); // Round cumulative P/L to 2 decimal places
     });
 
     // Destroy existing chart if it exists (to avoid duplication)
