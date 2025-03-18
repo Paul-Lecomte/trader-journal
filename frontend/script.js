@@ -2,7 +2,13 @@
 function fetchTrades() {
     return new Promise((resolve, reject) => {
         chrome.storage.local.get({ trades: [] }, (result) => {
-            resolve(result.trades);
+            if (chrome.runtime.lastError) {
+                console.error('Error fetching trades:', chrome.runtime.lastError);
+                reject(chrome.runtime.lastError);
+            } else {
+                console.log('Fetched trades:', result.trades); // Log fetched trades
+                resolve(result.trades);
+            }
         });
     });
 }
@@ -16,6 +22,11 @@ function formatTime(timestamp) {
 function renderTradeHistory(trades) {
     const tableBody = document.getElementById('trade-history-body');
     tableBody.innerHTML = ''; // Clear any existing rows
+
+    if (!Array.isArray(trades) || trades.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="16">No trades found.</td></tr>';
+        return;
+    }
 
     trades.forEach(trade => {
         const row = document.createElement('tr');
@@ -73,6 +84,8 @@ function renderTradeHistory(trades) {
 
 // Create Win/Loss chart
 function createWinLossChart(trades) {
+    if (!trades || trades.length === 0) return;
+
     // Group trades by status using Lodash (could also be done using simple JS, but Lodash is easier)
     const grouped = _.groupBy(trades, 'status');
 
@@ -107,8 +120,10 @@ function createWinLossChart(trades) {
     });
 }
 
-// Create Win/Loss chart
+// Create Win/Loss chart evolution over time
 function createWinLossChartEvolution(trades) {
+    if (!trades || trades.length === 0) return;
+
     // Sort trades by trade time
     const sortedTrades = trades.sort((a, b) => a.tradeTime - b.tradeTime);
 
@@ -163,6 +178,7 @@ function createWinLossChartEvolution(trades) {
         }
     });
 }
+
 // Clear all stored data (trades and comments)
 function clearAllData() {
     chrome.storage.local.remove(['processedOrderIds', 'trades', 'comments'], () => {
@@ -178,6 +194,8 @@ function init() {
         renderTradeHistory(trades);
         createWinLossChart(trades);
         createWinLossChartEvolution(trades);
+    }).catch(error => {
+        console.error('Error during initialization:', error);
     });
 
     // Filter trades by search input
@@ -187,6 +205,8 @@ function init() {
             const filteredTrades = trades.filter(trade => trade.symbol.toLowerCase().includes(searchInput) || trade.orderId.toLowerCase().includes(searchInput));
             renderTradeHistory(filteredTrades);
             createWinLossChart(filteredTrades);
+        }).catch(error => {
+            console.error('Error during trade filtering:', error);
         });
     });
 
