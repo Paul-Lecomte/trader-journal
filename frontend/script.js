@@ -165,7 +165,7 @@ function createWinLossChartEvolution(trades) {
 }
 // Clear all stored data (trades and comments)
 function clearAllData() {
-    chrome.storage.local.remove(['trades', 'comments'], () => {
+    chrome.storage.local.remove(['processedOrderIds', 'trades', 'comments'], () => {
         console.log('All data has been cleared.');
         // Optionally, refresh the page or reset the view
         location.reload(); // Reloads the page to reflect the cleared data

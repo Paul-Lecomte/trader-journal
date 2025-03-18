@@ -136,8 +136,6 @@ function checkAndExtractTrades() {
     }
 }
 
-
-
 // Watch for page changes and extract trades
 const observer = new MutationObserver(() => {
     setTimeout(checkAndExtractTrades, 500);
