@@ -18,6 +18,12 @@ function formatTime(timestamp) {
     return moment(timestamp).format('MMMM Do YYYY, h:mm:ss a');
 }
 
+// Format P/L with a fallback to '--' if it's invalid
+function formatPL(pl) {
+    const parsedPL = parseFloat(pl);
+    return isNaN(parsedPL) ? '--' : parsedPL.toFixed(2); // Check if it's a valid number, otherwise return '--'
+}
+
 // Render trade history to the table
 function renderTradeHistory(trades) {
     const tableBody = document.getElementById('trade-history-body');
@@ -36,7 +42,7 @@ function renderTradeHistory(trades) {
         const formattedCloseTime = trade.closeTime ? formatTime(trade.closeTime) : '--';
 
         // Calculate P/L if available and round it to 2 decimal places
-        const pl = trade.pl ? parseFloat(trade.pl).toFixed(2) : '--'; // Use P/L value from trade or '--' if not available
+        const pl = formatPL(trade.pl); // Use the formatPL function to handle P/L
 
         row.innerHTML = `
             <td>${trade.symbol}</td>
