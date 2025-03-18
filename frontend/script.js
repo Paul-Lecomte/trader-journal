@@ -163,6 +163,14 @@ function createWinLossChartEvolution(trades) {
         }
     });
 }
+// Clear all stored data (trades and comments)
+function clearAllData() {
+    chrome.storage.local.remove(['trades', 'comments'], () => {
+        console.log('All data has been cleared.');
+        // Optionally, you can also refresh the page or reset the view
+        location.reload(); // Reloads the page to reflect the cleared data
+    });
+}
 
 // Initialize the app
 function init() {
@@ -181,6 +189,9 @@ function init() {
             createWinLossChart(filteredTrades);
         });
     });
+
+    // Add event listener for the "Clear Data" button
+    document.getElementById('clear-data-button').addEventListener('click', clearAllData);
 }
 
 // Initialize the app when the document is ready
