@@ -100,26 +100,24 @@ function pairTrades() {
     let completedTrades = [];
 
     tradeHistory.forEach(trade => {
-        const { symbol, side, price, qty, tradeTime, closeTime, margin, leverage, status, orderId, stopPrice } = trade;
+        const { symbol, side, price, qty, tradeTime, closeTime, margin, leverage, status, orderId } = trade;
 
         if (!openPositions[symbol]) {
             openPositions[symbol] = [];
         }
 
         if (side === "buy") {
-            openPositions[symbol].push({ price, qty, tradeTime, closeTime, margin, leverage, status, orderId, stopPrice });
+            openPositions[symbol].push({ price, qty, tradeTime, closeTime, margin, leverage, status, orderId });
         } else if (side === "sell" && openPositions[symbol].length > 0) {
             let entryTrade = openPositions[symbol].shift();
             let pl = calculatePL(entryTrade.price, price, qty, "buy");
 
-            // Calculate Risk (difference between entry price and stop price)
-            let risk = Math.abs(parseFloat(entryTrade.price) - parseFloat(entryTrade.stopPrice || entryTrade.price));
-
-            // Calculate Reward (difference between exit price and entry price)
-            let reward = Math.abs(parseFloat(price) - parseFloat(entryTrade.price));
+            // Calculate Risk and Reward using entry and exit price
+            let risk = Math.abs(parseFloat(entryTrade.price) - parseFloat(price)); // Difference between entry and exit price
+            let reward = Math.abs(parseFloat(price) - parseFloat(entryTrade.price)); // Same logic for reward
 
             // Calculate Risk-to-Reward Ratio
-            let riskToRewardRatio = risk > 0 ? (reward / risk).toFixed(2) : "--"; // If risk is 0, return "--"
+            let riskToRewardRatio = risk > 0 ? (reward / risk).toFixed(2) : "--"; // Avoid division by 0 and provide "--" if risk is 0
 
             completedTrades.push({
                 symbol,
