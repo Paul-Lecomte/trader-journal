@@ -1,14 +1,15 @@
 console.clear();
-console.log("Checking for completed trades...");
+console.log("Extracting and pairing trades...");
 
 let extracting = false;
+
 
 function isHistoryPageLoadedAndActive() {
     return document.querySelector('div.page-RYOkdllU.js-page[data-account-manager-page-id="history"].active-RYOkdllU') !== null;
 }
 
-// Store open positions for P/L calculation
-let openPositions = {};
+// Store all trade history before pairing
+let tradeHistory = [];
 
 function calculatePL(entryPrice, exitPrice, qty, side) {
     entryPrice = parseFloat(entryPrice.replace(/\s/g, '').replace(',', '.'));
@@ -19,16 +20,12 @@ function calculatePL(entryPrice, exitPrice, qty, side) {
         return "--"; // Return placeholder if invalid
     }
 
-    // Calculate P/L based on side (Buy or Sell)
-    if (side.toLowerCase() === "buy") {
-        return (exitPrice - entryPrice) * qty;  // Profit when price increases
-    } else if (side.toLowerCase() === "sell") {
-        return (entryPrice - exitPrice) * qty;  // Profit when price decreases
-    }
-    return "--";  // If neither Buy nor Sell, return placeholder
+    return side.toLowerCase() === "buy"
+        ? (exitPrice - entryPrice) * qty  // Profit when price increases
+        : (entryPrice - exitPrice) * qty; // Profit when price decreases
 }
 
-function extractCompletedTradeData() {
+function extractTradeHistory() {
     if (extracting) return;
     extracting = true;
 
@@ -43,95 +40,91 @@ function extractCompletedTradeData() {
     console.log("Found trade rows:", tradeRows.length);
 
     if (tradeRows.length === 0) {
-        console.log("No trades found in the table.");
+        console.log("No trades found.");
         extracting = false;
         return;
     }
 
+    tradeHistory = []; // Clear old history before reloading
+
     tradeRows.forEach(trade => {
         const symbol = trade.querySelector("td[data-label='Symbole']")?.innerText || "--";
         const side = trade.querySelector("td[data-label='Côté']")?.innerText || "--";
-        const type = trade.querySelector("td[data-label='Type']")?.innerText || "--";
         const qty = trade.querySelector("td[data-label='Qté']")?.innerText || "--";
-        const priceLimit = trade.querySelector("td[data-label='Limite de Prix']")?.innerText || "--";
-        const stopPrice = trade.querySelector("td[data-label='Prix d’arrêt']")?.innerText || "--";
         const avgPrice = trade.querySelector("td[data-label='Prix de remplissage']")?.innerText || "--";
-        const status = trade.querySelector("td[data-label='Statut']")?.innerText || "--";
-        const commission = trade.querySelector("td[data-label='Commission']")?.innerText || "--";
-        const leverage = trade.querySelector("td[data-label='Effet de levier']")?.innerText || "--";
-        const margin = trade.querySelector("td[data-label='Marge']")?.innerText || "--";
         const tradeTime = trade.querySelector("td[data-label='Placer le temps']")?.innerText || "--";
-        const closeTime = trade.querySelector("td[data-label='Heure de clôture']")?.innerText || "--";
         const orderId = trade.querySelector("td[data-label='Numéro de commande']")?.innerText || "--";
 
-        if (!symbol || !side || !avgPrice || avgPrice === "--") return; // Ignore invalid trades
+        if (!symbol || !side || !avgPrice || avgPrice === "--") return;
 
-        const price = avgPrice.replace(/\s/g, '').replace(',', '.'); // Convert price format
+        const price = avgPrice.replace(/\s/g, '').replace(',', '.');
+
+        tradeHistory.push({
+            symbol,
+            side: side.toLowerCase(),
+            price,
+            qty,
+            tradeTime,
+            orderId
+        });
+    });
+
+    console.log("Collected trade history:", tradeHistory);
+    pairTrades();
+    extracting = false;
+}
+
+function pairTrades() {
+    if (tradeHistory.length === 0) {
+        console.log("No trade history available for pairing.");
+        return;
+    }
+
+    let openPositions = {};
+    let completedTrades = [];
+
+    tradeHistory.forEach(trade => {
+        const { symbol, side, price, qty, tradeTime, orderId } = trade;
 
         if (!openPositions[symbol]) {
             openPositions[symbol] = [];
         }
 
-        let pl = "--";
-        let closingPrice = "--";
+        if (side === "buy") {
+            // Save Buy trade
+            openPositions[symbol].push({ price, qty, tradeTime, orderId });
+        } else if (side === "sell" && openPositions[symbol].length > 0) {
+            // Match Sell with previous Buy
+            let entryTrade = openPositions[symbol].shift(); // FIFO (First Buy gets closed first)
+            let pl = calculatePL(entryTrade.price, price, qty, "buy");
 
-        if (side.toLowerCase() === "buy") {
-            openPositions[symbol].push({ price, qty, orderId, tradeTime });
-        } else if (side.toLowerCase() === "sell" && openPositions[symbol].length > 0) {
-            let buyTrade = openPositions[symbol].shift(); // Match with first Buy trade
-            pl = calculatePL(buyTrade.price, price, qty, side);
-            closingPrice = price;
+            completedTrades.push({
+                symbol,
+                entrySide: "Buy",
+                entryPrice: entryTrade.price,
+                entryTime: entryTrade.tradeTime,
+                exitSide: "Sell",
+                exitPrice: price,
+                exitTime: tradeTime,
+                qty,
+                orderId: `${entryTrade.orderId}-${orderId}`,
+                pl
+            });
         }
-
-        const tradeData = {
-            symbol,
-            side,
-            type,
-            qty,
-            priceLimit,
-            stopPrice,
-            avgPrice,
-            status,
-            commission,
-            leverage,
-            margin,
-            tradeTime,
-            closeTime,
-            orderId,
-            pl,
-            closingPrice
-        };
-
-        chrome.storage.local.get({ processedOrderIds: [] }, (result) => {
-            const processedOrderIds = result.processedOrderIds || [];
-
-            if (!processedOrderIds.includes(orderId)) {
-                chrome.runtime.sendMessage({ action: "saveTrade", tradeData }, (response) => {
-                    if (response?.success) {
-                        console.log("Trade successfully saved:", tradeData);
-                        processedOrderIds.push(orderId);
-                        chrome.storage.local.set({ processedOrderIds });
-                    } else {
-                        console.log("Failed to save trade:", response?.error);
-                    }
-                });
-            } else {
-                console.log(`Order ID ${orderId} already processed. Updating P/L...`);
-                chrome.storage.local.get({ trades: [] }, (data) => {
-                    const trades = data.trades.map(trade => trade.orderId === orderId ? { ...trade, pl, closingPrice } : trade);
-                    chrome.storage.local.set({ trades });
-                });
-            }
-        });
     });
 
-    extracting = false;
+    console.log("Completed Trades:", completedTrades);
+
+    // Save only completed trades
+    chrome.storage.local.set({ trades: completedTrades }, () => {
+        console.log("Saved completed trades.");
+    });
 }
 
+// ✅ This function is now using a properly defined `isHistoryPageLoadedAndActive()`
 function checkAndExtractTrades() {
     if (isHistoryPageLoadedAndActive()) {
-        // Wait for 2 seconds before continuing
-        setTimeout(extractCompletedTradeData, 2000);
+        setTimeout(extractTradeHistory, 2000);
     } else {
         console.log("History page is not loaded or active yet.");
     }
