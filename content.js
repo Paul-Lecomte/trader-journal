@@ -135,7 +135,7 @@ function pairTrades() {
                 status: entryTrade.status,
                 orderId: `${entryTrade.orderId}-${orderId}`,
                 pl,
-                riskToRewardRatio // Add the Risk-to-Reward Ratio to the completed trade
+                riskToRewardRatio
             });
         }
     });
