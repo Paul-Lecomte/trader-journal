@@ -137,7 +137,6 @@ function pairTrades() {
     });
 }
 
-// ✅ This function is now using a properly defined `isHistoryPageLoadedAndActive()`
 function checkAndExtractTrades() {
     if (isHistoryPageLoadedAndActive()) {
         setTimeout(extractTradeHistory, 2000);
