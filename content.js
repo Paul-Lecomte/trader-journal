@@ -53,6 +53,10 @@ function extractTradeHistory() {
         const qty = trade.querySelector("td[data-label='Qté']")?.innerText || "--";
         const avgPrice = trade.querySelector("td[data-label='Prix de remplissage']")?.innerText || "--";
         const tradeTime = trade.querySelector("td[data-label='Placer le temps']")?.innerText || "--";
+        const closeTime = trade.querySelector("td[data-label='Heure de clôture']")?.innerText || "--";
+        const margin = trade.querySelector("td[data-label='Marge']")?.innerText || "--";
+        const leverage = trade.querySelector("td[data-label='Levier']")?.innerText || "--";
+        const status = trade.querySelector("td[data-label='Statut']")?.innerText || "--";
         const orderId = trade.querySelector("td[data-label='Numéro de commande']")?.innerText || "--";
 
         if (!symbol || !side || !avgPrice || avgPrice === "--") return;
@@ -65,6 +69,10 @@ function extractTradeHistory() {
             price,
             qty,
             tradeTime,
+            closeTime,
+            margin,
+            leverage,
+            status,
             orderId
         });
     });
@@ -84,18 +92,16 @@ function pairTrades() {
     let completedTrades = [];
 
     tradeHistory.forEach(trade => {
-        const { symbol, side, price, qty, tradeTime, orderId } = trade;
+        const { symbol, side, price, qty, tradeTime, closeTime, margin, leverage, status, orderId } = trade;
 
         if (!openPositions[symbol]) {
             openPositions[symbol] = [];
         }
 
         if (side === "buy") {
-            // Save Buy trade
-            openPositions[symbol].push({ price, qty, tradeTime, orderId });
+            openPositions[symbol].push({ price, qty, tradeTime, closeTime, margin, leverage, status, orderId });
         } else if (side === "sell" && openPositions[symbol].length > 0) {
-            // Match Sell with previous Buy
-            let entryTrade = openPositions[symbol].shift(); // FIFO (First Buy gets closed first)
+            let entryTrade = openPositions[symbol].shift();
             let pl = calculatePL(entryTrade.price, price, qty, "buy");
 
             completedTrades.push({
@@ -105,8 +111,11 @@ function pairTrades() {
                 entryTime: entryTrade.tradeTime,
                 exitSide: "Sell",
                 exitPrice: price,
-                exitTime: tradeTime,
+                exitTime: closeTime,
                 qty,
+                margin: entryTrade.margin,
+                leverage: entryTrade.leverage,
+                status: entryTrade.status,
                 orderId: `${entryTrade.orderId}-${orderId}`,
                 pl
             });
@@ -115,9 +124,8 @@ function pairTrades() {
 
     console.log("Completed Trades:", completedTrades);
 
-    // Save only completed trades
     chrome.storage.local.set({ trades: completedTrades }, () => {
-        console.log("Saved completed trades.");
+        console.log("Saved completed trades with additional details.");
     });
 }
 
