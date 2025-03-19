@@ -37,29 +37,27 @@ function renderTradeHistory(trades) {
     trades.forEach(trade => {
         const row = document.createElement('tr');
 
-        // Format trade time and close time
-        const formattedTradeTime = formatTime(trade.tradeTime);
-        const formattedCloseTime = trade.closeTime ? formatTime(trade.closeTime) : '--';
+        // Format entry and exit times
+        const formattedEntryTime = formatTime(trade.entryTime);
+        const formattedExitTime = trade.exitTime ? formatTime(trade.exitTime) : '--';
 
         // Calculate P/L if available and round it to 2 decimal places
         const pl = formatPL(trade.pl); // Use the formatPL function to handle P/L
 
         row.innerHTML = `
-            <td>${trade.symbol}</td>
-            <td>${trade.side}</td>
-            <td>${trade.type}</td>
-            <td>${trade.qty}</td>
-            <td>${trade.priceLimit || '--'}</td>
-            <td>${trade.stopPrice || '--'}</td>
-            <td>${trade.avgPrice}</td>
-            <td>${trade.status}</td>
-            <td>${trade.commission || '--'}</td>
+            <td>${trade.symbol || '--'}</td>
+            <td>${trade.entrySide || '--'}</td>
+            <td>${trade.exitSide || '--'}</td>
+            <td>${trade.qty || '--'}</td>
+            <td>${trade.entryPrice || '--'}</td>
+            <td>${trade.exitPrice || '--'}</td>
             <td>${trade.leverage || '--'}</td>
             <td>${trade.margin || '--'}</td>
-            <td>${formattedTradeTime}</td>
-            <td>${formattedCloseTime}</td>
-            <td>${trade.orderId}</td>
-            <td>${pl}</td>
+            <td>${trade.status || '--'}</td>
+            <td>${formattedEntryTime || '--'}</td>
+            <td>${formattedExitTime || '--'}</td>
+            <td>${trade.orderId || '--'}</td>
+            <td>${pl || '--'}</td>
             <td><textarea class="comment" data-order-id="${trade.orderId}" placeholder="Add a comment"></textarea></td>
         `;
         tableBody.appendChild(row);
@@ -88,14 +86,14 @@ function renderTradeHistory(trades) {
     });
 }
 
-// Create Win/Loss chart
+// Create Win/Loss chart (based on trade status and P/L)
 function createWinLossChart(trades) {
     if (!trades || trades.length === 0) return;
 
-    // Group trades by status using Lodash (could also be done using simple JS, but Lodash is easier)
+    // Group trades by status
     const grouped = _.groupBy(trades, 'status');
 
-    const winCount = (grouped['Completed'] || []).filter(trade => parseFloat(trade.avgPrice) > 0).length;
+    const winCount = (grouped['Completed'] || []).filter(trade => trade.pl > 0).length;
     const lossCount = trades.length - winCount;
 
     const ctx = document.getElementById('win-loss-chart').getContext('2d');
@@ -126,12 +124,12 @@ function createWinLossChart(trades) {
     });
 }
 
-// Create Win/Loss chart evolution over time
+// Create Win/Loss chart evolution over time (based on cumulative P/L)
 function createWinLossChartEvolution(trades) {
     if (!trades || trades.length === 0) return;
 
-    // Sort trades by trade time
-    const sortedTrades = trades.sort((a, b) => a.tradeTime - b.tradeTime);
+    // Sort trades by entry time
+    const sortedTrades = trades.sort((a, b) => new Date(a.entryTime) - new Date(b.entryTime));
 
     // Extract labels (dates) and cumulative P/L
     let labels = [];
@@ -139,7 +137,7 @@ function createWinLossChartEvolution(trades) {
     let runningTotal = 0;
 
     sortedTrades.forEach(trade => {
-        const tradeDate = moment(trade.tradeTime).format('YYYY-MM-DD'); // Format date
+        const tradeDate = moment(trade.entryTime).format('YYYY-MM-DD'); // Format date
         const pl = parseFloat(trade.pl) || 0; // Use P/L or 0 if missing
 
         runningTotal += pl; // Update running total
@@ -189,7 +187,6 @@ function createWinLossChartEvolution(trades) {
 function clearAllData() {
     chrome.storage.local.remove(['processedOrderIds', 'trades', 'comments'], () => {
         console.log('All data has been cleared.');
-        // Optionally, refresh the page or reset the view
         location.reload(); // Reloads the page to reflect the cleared data
     });
 }
