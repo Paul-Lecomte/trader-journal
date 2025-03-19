@@ -58,6 +58,7 @@ function renderTradeHistory(trades) {
             <td>${formattedExitTime || '--'}</td>
             <td>${trade.orderId || '--'}</td>
             <td>${pl || '--'}</td>
+            <td>${trade.riskToRewardRatio || '--'}</td>
             <td><textarea class="comment" data-order-id="${trade.orderId}" placeholder="Add a comment"></textarea></td>
         `;
         tableBody.appendChild(row);
