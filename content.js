@@ -50,13 +50,17 @@ function extractTradeHistory() {
     tradeRows.forEach(trade => {
         const symbol = trade.querySelector("td[data-label='Symbole']")?.innerText || "--";
         const side = trade.querySelector("td[data-label='Côté']")?.innerText || "--";
+        const type = trade.querySelector("td[data-label='Type']")?.innerText || "--";
         const qty = trade.querySelector("td[data-label='Qté']")?.innerText || "--";
+        const priceLimit = trade.querySelector("td[data-label='Limite de Prix']")?.innerText || "--";
+        const stopPrice = trade.querySelector("td[data-label='Prix d’arrêt']")?.innerText || "--";
         const avgPrice = trade.querySelector("td[data-label='Prix de remplissage']")?.innerText || "--";
+        const status = trade.querySelector("td[data-label='Statut']")?.innerText || "--";
+        const commission = trade.querySelector("td[data-label='Commission']")?.innerText || "--";
+        const leverage = trade.querySelector("td[data-label='Effet de levier']")?.innerText || "--";
+        const margin = trade.querySelector("td[data-label='Marge']")?.innerText || "--";
         const tradeTime = trade.querySelector("td[data-label='Placer le temps']")?.innerText || "--";
         const closeTime = trade.querySelector("td[data-label='Heure de clôture']")?.innerText || "--";
-        const margin = trade.querySelector("td[data-label='Marge']")?.innerText || "--";
-        const leverage = trade.querySelector("td[data-label='Levier']")?.innerText || "--";
-        const status = trade.querySelector("td[data-label='Statut']")?.innerText || "--";
         const orderId = trade.querySelector("td[data-label='Numéro de commande']")?.innerText || "--";
 
         if (!symbol || !side || !avgPrice || avgPrice === "--") return;
@@ -66,6 +70,7 @@ function extractTradeHistory() {
         tradeHistory.push({
             symbol,
             side: side.toLowerCase(),
+            type,
             price,
             qty,
             tradeTime,
@@ -73,7 +78,10 @@ function extractTradeHistory() {
             margin,
             leverage,
             status,
-            orderId
+            orderId,
+            priceLimit,
+            stopPrice,
+            commission
         });
     });
 
