@@ -87,18 +87,24 @@ function renderTradeHistory(trades) {
     });
 }
 
-// Create Win/Loss chart (based on trade status and P/L)
+// Create Win/Loss chart (based on P/L)
 function createWinLossChart(trades) {
     if (!trades || trades.length === 0) return;
 
-    // Group trades by status
-    const grouped = _.groupBy(trades, 'status');
+    // Count wins and losses based on P/L value
+    const winCount = trades.filter(trade => parseFloat(trade.pl) > 0).length;
+    const lossCount = trades.filter(trade => parseFloat(trade.pl) < 0).length;
 
-    const winCount = (grouped['Completed'] || []).filter(trade => trade.pl > 0).length;
-    const lossCount = trades.length - winCount;
-
+    // Get chart context
     const ctx = document.getElementById('win-loss-chart').getContext('2d');
-    new Chart(ctx, {
+
+    // Destroy existing chart if it exists (to avoid duplication)
+    if (window.winLossChart) {
+        window.winLossChart.destroy();
+    }
+
+    // Create a new pie chart
+    window.winLossChart = new Chart(ctx, {
         type: 'pie',
         data: {
             labels: ['Wins', 'Losses'],
