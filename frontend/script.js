@@ -196,15 +196,18 @@ function createCandlestickChart(trades) {
 
     const candlestickData = trades.map(trade => ({
         x: moment(trade.entryTime).toDate(),
-        y: [
-            parseFloat(trade.entryPrice), // Open
-            parseFloat(trade.exitPrice),  // High
-            parseFloat(trade.entryPrice), // Low
-            parseFloat(trade.exitPrice)   // Close
-        ]
+        o: parseFloat(trade.entryPrice),  // Open
+        h: parseFloat(trade.exitPrice),  // High
+        l: parseFloat(trade.entryPrice), // Low
+        c: parseFloat(trade.exitPrice)   // Close
     }));
 
     const ctx = document.getElementById('candlestick-chart').getContext('2d');
+
+    // Register the chartjs financial plugin
+    Chart.register(ChartjsFinancial);
+
+    // Create the candlestick chart
     new Chart(ctx, {
         type: 'candlestick',
         data: {
@@ -216,8 +219,12 @@ function createCandlestickChart(trades) {
         options: {
             responsive: true,
             scales: {
-                x: { title: { display: true, text: 'Date' } },
-                y: { title: { display: true, text: 'Price' } }
+                x: {
+                    title: { display: true, text: 'Date' }
+                },
+                y: {
+                    title: { display: true, text: 'Price' }
+                }
             },
             plugins: {
                 legend: { display: false }
