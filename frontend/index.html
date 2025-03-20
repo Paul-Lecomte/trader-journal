@@ -10,27 +10,34 @@
     <script src="../assets/moment.min.js"></script>
     <script src="../assets/chart.min.js"></script>
 
+    <!-- Fonts & Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+    <!-- Custom Styles -->
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <div class="container">
     <!-- Sidebar -->
-    <div class="sidebar">
-        <h2>Trading Journal</h2>
-        <input type="text" id="search-input" placeholder="Search by Symbol or Order ID">
-        <button id="filter-button">Filter</button>
-    </div>
+    <aside class="sidebar">
+        <h2><i class="fas fa-chart-line"></i> Trading Journal</h2>
+        <div class="search-box">
+            <input type="text" id="search-input" placeholder="Search by Symbol or Order ID">
+            <button id="filter-button"><i class="fas fa-search"></i></button>
+        </div>
+        <button id="clear-data-button" class="clear-btn"><i class="fas fa-trash"></i> Clear Data</button>
+    </aside>
 
     <!-- Main Content -->
-    <div class="main-content">
+    <main class="main-content">
         <h3>Trade History</h3>
+
+        <!-- Trading Charts -->
         <div class="trading-chart">
-            <!-- Win/Loss Chart -->
             <div class="chart-container">
                 <canvas id="win-loss-chart"></canvas>
             </div>
-
-            <!-- Win/Loss Evolution -->
             <div class="chart-container">
                 <canvas id="win-loss-evolution-chart"></canvas>
             </div>
@@ -38,7 +45,6 @@
 
         <!-- Trade Table -->
         <div class="table-container">
-            <button id="clear-data-button">Clear Data</button>
             <table id="trade-history">
                 <thead>
                 <tr>
@@ -64,7 +70,7 @@
                 </tbody>
             </table>
         </div>
-    </div>
+    </main>
 </div>
 
 <!-- Scripts -->
