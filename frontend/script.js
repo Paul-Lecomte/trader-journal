@@ -190,6 +190,42 @@ function createWinLossChartEvolution(trades) {
     });
 }
 
+// Create Candlestick Chart (P/L over time)
+function createCandlestickChart(trades) {
+    if (!trades || trades.length === 0) return;
+
+    const candlestickData = trades.map(trade => ({
+        x: moment(trade.entryTime).toDate(),
+        y: [
+            parseFloat(trade.entryPrice), // Open
+            parseFloat(trade.exitPrice),  // High
+            parseFloat(trade.entryPrice), // Low
+            parseFloat(trade.exitPrice)   // Close
+        ]
+    }));
+
+    const ctx = document.getElementById('candlestick-chart').getContext('2d');
+    new Chart(ctx, {
+        type: 'candlestick',
+        data: {
+            datasets: [{
+                label: 'Trade P/L',
+                data: candlestickData
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                x: { title: { display: true, text: 'Date' } },
+                y: { title: { display: true, text: 'Price' } }
+            },
+            plugins: {
+                legend: { display: false }
+            }
+        }
+    });
+}
+
 // Clear all stored data (trades and comments)
 function clearAllData() {
     chrome.storage.local.remove(['processedOrderIds', 'trades', 'comments'], () => {
@@ -215,6 +251,7 @@ function init() {
             const filteredTrades = trades.filter(trade => trade.symbol.toLowerCase().includes(searchInput) || trade.orderId.toLowerCase().includes(searchInput));
             renderTradeHistory(filteredTrades);
             createWinLossChart(filteredTrades);
+            createCandlestickChart(trades);
         }).catch(error => {
             console.error('Error during trade filtering:', error);
         });
