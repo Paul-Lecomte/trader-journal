@@ -114,7 +114,16 @@ function pairTrades() {
             let sellTradeIndex = openSellPositions[symbol].findIndex(sell => sell.qty === qty);
             if (sellTradeIndex !== -1) {
                 let sellTrade = openSellPositions[symbol].splice(sellTradeIndex, 1)[0];
+
+                // Calculate P/L
                 let pl = calculatePL(price, sellTrade.price, qty, "sell");
+
+                // Calculate Risk and Reward using entry and exit price
+                let risk = Math.abs(parseFloat(sellTrade.price) - parseFloat(price)); // Difference between entry and exit price
+                let reward = Math.abs(parseFloat(price) - parseFloat(sellTrade.price)); // Same logic for reward
+
+                // Calculate Risk-to-Reward Ratio
+                let riskToRewardRatio = risk > 0 ? (reward / risk).toFixed(2) : "--"; // Avoid division by 0 and provide "--" if risk is 0
 
                 completedTrades.push({
                     symbol,
@@ -129,7 +138,8 @@ function pairTrades() {
                     leverage,
                     status,
                     orderId: `${orderId}-${sellTrade.orderId}`,
-                    pl
+                    pl,
+                    riskToRewardRatio
                 });
             } else {
                 openPositions[symbol].push({ price, qty, tradeTime, closeTime, margin, leverage, status, orderId });
@@ -141,6 +151,13 @@ function pairTrades() {
             if (entryTradeIndex !== -1) {
                 let entryTrade = openPositions[symbol].splice(entryTradeIndex, 1)[0];
                 let pl = calculatePL(entryTrade.price, price, qty, "buy");
+
+                // Calculate Risk and Reward using entry and exit price
+                let risk = Math.abs(parseFloat(entryTrade.price) - parseFloat(price)); // Difference between entry and exit price
+                let reward = Math.abs(parseFloat(price) - parseFloat(entryTrade.price)); // Same logic for reward
+
+                // Calculate Risk-to-Reward Ratio
+                let riskToRewardRatio = risk > 0 ? (reward / risk).toFixed(2) : "--"; // Avoid division by 0 and provide "--" if risk is 0
 
                 completedTrades.push({
                     symbol,
@@ -155,7 +172,8 @@ function pairTrades() {
                     leverage: entryTrade.leverage,
                     status: entryTrade.status,
                     orderId: `${entryTrade.orderId}-${orderId}`,
-                    pl
+                    pl,
+                    riskToRewardRatio
                 });
             } else {
                 // If no buy trade is found, store the sell trade
