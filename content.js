@@ -3,7 +3,6 @@ console.log("Extracting and pairing trades...");
 
 let extracting = false;
 
-
 function isHistoryPageLoadedAndActive() {
     return document.querySelector('div.page-RYOkdllU.js-page[data-account-manager-page-id="history"].active-RYOkdllU') !== null;
 }
@@ -97,6 +96,7 @@ function pairTrades() {
     }
 
     let openPositions = {};
+    let openSellPositions = {};
     let completedTrades = [];
 
     tradeHistory.forEach(trade => {
@@ -105,40 +105,68 @@ function pairTrades() {
         if (!openPositions[symbol]) {
             openPositions[symbol] = [];
         }
+        if (!openSellPositions[symbol]) {
+            openSellPositions[symbol] = [];
+        }
 
         if (side === "buy") {
-            openPositions[symbol].push({ price, qty, tradeTime, closeTime, margin, leverage, status, orderId });
-        } else if (side === "sell" && openPositions[symbol].length > 0) {
-            let entryTrade = openPositions[symbol].shift();
-            let pl = calculatePL(entryTrade.price, price, qty, "buy");
+            // If there are unpaired sell trades, match them first
+            let sellTradeIndex = openSellPositions[symbol].findIndex(sell => sell.qty === qty);
+            if (sellTradeIndex !== -1) {
+                let sellTrade = openSellPositions[symbol].splice(sellTradeIndex, 1)[0];
+                let pl = calculatePL(price, sellTrade.price, qty, "sell");
 
-            // Calculate Risk and Reward using entry and exit price
-            let risk = Math.abs(parseFloat(entryTrade.price) - parseFloat(price)); // Difference between entry and exit price
-            let reward = Math.abs(parseFloat(price) - parseFloat(entryTrade.price)); // Same logic for reward
+                completedTrades.push({
+                    symbol,
+                    entrySide: "Buy",
+                    entryPrice: price,
+                    entryTime: tradeTime,
+                    exitSide: "Sell",
+                    exitPrice: sellTrade.price,
+                    exitTime: sellTrade.closeTime,
+                    qty,
+                    margin,
+                    leverage,
+                    status,
+                    orderId: `${orderId}-${sellTrade.orderId}`,
+                    pl
+                });
+            } else {
+                openPositions[symbol].push({ price, qty, tradeTime, closeTime, margin, leverage, status, orderId });
+            }
+        } else if (side === "sell") {
+            // Try to find a matching buy trade
+            let entryTradeIndex = openPositions[symbol].findIndex(entry => entry.qty === qty);
 
-            // Calculate Risk-to-Reward Ratio
-            let riskToRewardRatio = risk > 0 ? (reward / risk).toFixed(2) : "--"; // Avoid division by 0 and provide "--" if risk is 0
+            if (entryTradeIndex !== -1) {
+                let entryTrade = openPositions[symbol].splice(entryTradeIndex, 1)[0];
+                let pl = calculatePL(entryTrade.price, price, qty, "buy");
 
-            completedTrades.push({
-                symbol,
-                entrySide: "Buy",
-                entryPrice: entryTrade.price,
-                entryTime: entryTrade.tradeTime,
-                exitSide: "Sell",
-                exitPrice: price,
-                exitTime: closeTime,
-                qty,
-                margin: entryTrade.margin,
-                leverage: entryTrade.leverage,
-                status: entryTrade.status,
-                orderId: `${entryTrade.orderId}-${orderId}`,
-                pl,
-                riskToRewardRatio
-            });
+                completedTrades.push({
+                    symbol,
+                    entrySide: "Buy",
+                    entryPrice: entryTrade.price,
+                    entryTime: entryTrade.tradeTime,
+                    exitSide: "Sell",
+                    exitPrice: price,
+                    exitTime: closeTime,
+                    qty,
+                    margin: entryTrade.margin,
+                    leverage: entryTrade.leverage,
+                    status: entryTrade.status,
+                    orderId: `${entryTrade.orderId}-${orderId}`,
+                    pl
+                });
+            } else {
+                // If no buy trade is found, store the sell trade
+                openSellPositions[symbol].push({ price, qty, tradeTime, closeTime, orderId });
+            }
         }
     });
 
     console.log("Completed Trades:", completedTrades);
+    console.log("Unpaired Buy Trades:", openPositions);
+    console.log("Unpaired Sell Trades:", openSellPositions);
 
     chrome.storage.local.set({ trades: completedTrades }, () => {
         console.log("Saved completed trades with additional details.");
